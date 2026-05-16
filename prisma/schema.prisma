@@ -1,0 +1,43 @@
+datasource db {
+  provider = "mongodb"
+  url      = "" // Leave empty! prisma.config.ts injects process.env.DATABASE_URL here dynamically
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  name      String?
+  email     String          @unique
+  password  String
+  image     String?
+  isActive  Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  // Relations
+  messages  Message[]
+  sessions  ActiveSession[]
+}
+
+model ActiveSession {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  deviceId  String   // To track unique browser/device instances
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  body      String?
+  image     String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  senderId  String   @db.ObjectId
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
